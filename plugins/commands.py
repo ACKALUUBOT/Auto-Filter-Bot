@@ -400,6 +400,22 @@ async def delete_file(bot, message):
     await message.reply_text(f"Do you want to delete all: {query} ?", reply_markup=InlineKeyboardMarkup(btn))
  
 
+@Client.on_message(filters.command('delete_all'))
+async def delete_all_index(bot, message):
+    user_id = message.from_user.id
+    if user_id not in ADMINS:
+        await message.delete()
+        return
+    btn = [[
+        InlineKeyboardButton(text="YES", callback_data="delete_all")
+    ],[
+        InlineKeyboardButton(text="CLOSE", callback_data="close_data")
+    ]]
+    files = await Media.count_documents()
+    if int(files) == 0:
+        return await message.reply_text('Not have files to delete')
+    await message.reply_text(f'Total {files} files have.\nDo you want to delete all?', reply_markup=InlineKeyboardMarkup(btn))
+    
 
 @Client.on_message(filters.command('img_2_link'))
 async def img_2_link(bot, message):
