@@ -56,7 +56,7 @@ async def callback_handler(client, query: CallbackQuery):
                     f"Payment ke baad screenshot @{OWNER_USERNAME} ko bhejein."
                 ),
                 reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("✅ Paid (Send Screenshot)", url=f"https://t.me/{OWNER_USERNAME}")]
+                    InlineKeyboardButton("✅ Paid (Send Screenshot)", url=f"https://t.me/{OWNER_USERNAME}")
                 ],[
                     InlineKeyboardButton("Close", callback_data="close_data")
                 ])
