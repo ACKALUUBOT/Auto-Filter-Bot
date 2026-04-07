@@ -157,8 +157,6 @@ UPI_NAME = environ.get("UPI_NAME", "FUN WAVE FM")
 ONE_WEEK_PRICE = int(environ.get("ONE_WEEK_PRICE", "15"))
 ONE_MONTH_PRICE = int(environ.get("ONE_MONTH_PRICE", "49"))
 THREE_MONTHS_PRICE = int(environ.get("THREE_MONTHS_PRICE", "149"))
-SIX_MONTHS_PRICE = int(environ.get("SIX_MONTHS_PRICE", "250"))
-ONE_YEAR_PRICE = int(environ.get("ONE_YEAR_PRICE", "499"))
 
 # for TMDb
 TMDB_API_KEY = environ.get("TMDB_API_KEY", "4a550d8fe1ae85f11471f5766194feea")  # Get API key from here - https://www.themoviedb.org/settings/api
