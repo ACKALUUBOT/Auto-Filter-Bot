@@ -52,11 +52,13 @@ async def callback_handler(client, query: CallbackQuery):
                     f"✨ **Plan:** {plan_type.upper()}\n"
                     f"💰 **Amount:** ₹{amount}\n\n"
                     f"1️⃣ QR Code scan karein.\n"
-                    f"2️⃣ Mobile users click: [Pay Now]({upi_url})\n\n"
+                    f"2️⃣ Mobile users click: [Pay Now] <code>6398324472@fam</code>\n\n"
                     f"Payment ke baad screenshot @{OWNER_USERNAME} ko bhejein."
                 ),
                 reply_markup=InlineKeyboardMarkup([
                     [InlineKeyboardButton("✅ Paid (Send Screenshot)", url=f"https://t.me/{OWNER_USERNAME}")]
+                ],[
+                    InlineKeyboardButton("Close", callback_data="close_data")
                 ])
             )
             await query.message.delete()
@@ -66,3 +68,11 @@ async def callback_handler(client, query: CallbackQuery):
         finally:
             if os.path.exists(qr_path):
                 os.remove(qr_path)
+
+    
+    elif query.data == "close_data":
+        try:
+            await query.message.delete()
+        except Exception:
+            await query.answer("Message purana ho chuka hai ya delete nahi ho sakta.", show_alert=False)
+            
