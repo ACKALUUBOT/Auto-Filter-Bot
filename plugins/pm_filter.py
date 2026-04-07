@@ -569,63 +569,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
         db.update_plan(query.from_user.id, mp)
         await query.message.edit(f"Congratulations! Your activated trial for 1 hour\nExpire: {ex.strftime('%Y.%m.%d %H:%M:%S')}")
 
-    elif query.data == 'activate_plan':
-        btn = [[
-            InlineKeyboardButton("💳 Pay via UPI (QR Code)", callback_data="upi_plans")
-        ],[
-            InlineKeyboardButton("Close", callback_data="close_data")
-        ]]
-        await query.message.edit("Aap premium kaise purchase karna chahte hain?", reply_markup=InlineKeyboardMarkup(btn))
-
-    elif query.data == "upi_plans":
-        btn = [
-            [InlineKeyboardButton(f"⏳ 1 Week - ₹{ONE_WEEK_PRICE}", callback_data="pay_upi_1week")],
-            [InlineKeyboardButton(f"📅 1 Month - ₹{ONE_MONTH_PRICE}", callback_data="pay_upi_1month")],
-            [InlineKeyboardButton(f"🗓 3 Months - ₹{THREE_MONTHS_PRICE}", callback_data="pay_upi_3months")],
-            [InlineKeyboardButton("🔙 Back", callback_data="activate_plan")]
-        ]
-        await query.message.edit_text("💎 Apna plan select karein:", reply_markup=InlineKeyboardMarkup(btn))
-
-    elif query.data.startswith('pay_upi_'):
-        plan_type = query.data.split('_')[-1]
-        
-        # Amount calculation
-        amounts = {
-            "1week": ONE_WEEK_PRICE,
-            "1month": ONE_MONTH_PRICE,
-            "3months": THREE_MONTHS_PRICE
-        }
-        amount = amounts.get(plan_type, 15)
-
-        # UPI URL
-        upi_url = f"upi://pay?pa={UPI_ID}&pn={UPI_NAME}&am={amount}&cu=INR"
-        qr_path = f"qr_{query.from_user.id}.png"
-        
-        try:
-            # Generate QR Code
-            qrcode = segno.make(upi_url)
-            qrcode.save(qr_path, scale=10)
-
-            await query.message.reply_photo(
-                photo=qr_path,
-                caption=(
-                    f"✨ **Plan:** {plan_type}\n"
-                    f"💰 **Amount:** ₹{amount}\n\n"
-                    f"1️⃣ QR Code scan karein ya 'Pay Now' par click karein.\n"
-                    f"2️⃣ Payment ke baad screenshot @{OWNER_USERNAME} ko bhejein."
-                ),
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("🔗 Pay Now (Mobile)", url=upi_url)],
-                    [InlineKeyboardButton("✅ Paid (Send Screenshot)", url=f"https://t.me/{OWNER_USERNAME}")]
-                ])
-            )
-        except Exception as e:
-            await query.message.reply_text(f"❌ Error generating QR: {e}")
-        finally:
-            if os.path.exists(qr_path):
-                os.remove(qr_path)
-
-
+    
     elif query.data == "start":
         buttons = [[
             InlineKeyboardButton("+ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ +", url=f'http://t.me/{temp.U_NAME}?startgroup=start', style=enums.ButtonStyle.PRIMARY)
