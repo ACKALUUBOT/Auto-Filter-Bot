@@ -1,7 +1,7 @@
 import asyncio
 import re
 from time import time as time_now
-import math, os
+import math, os, segno
 import random
 from pyrogram.errors.exceptions.bad_request_400 import MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty
 from Script import script
@@ -607,81 +607,60 @@ async def cb_handler(client: Client, query: CallbackQuery):
         await query.message.edit(f"Congratulations! Your activated trial for 1 hour\nExpire: {ex.strftime('%Y.%m.%d %H:%M:%S')}")
 
     elif query.data == 'activate_plan':
+        # Yahan humne "Stars" wala button hata kar "Direct UPI" kar diya hai
         btn = [[
-            InlineKeyboardButton("⭐️ Using Telegram Stars", callback_data=f"stars_activate_plan")
+            InlineKeyboardButton("💳 Pay via UPI (Automatic QR)", callback_data="upi_activate_plan")
         ],[
-            InlineKeyboardButton("🗣 Contacting Owner", callback_data=f"owner_activate_plan")
+            InlineKeyboardButton("🗣 Contact Owner (Manual)", callback_data="owner_activate_plan")
         ]]
-        if await is_premium(query.from_user.id, client):
-            txt = f"How would you like to purchase a premium plan?\n\nNone - You are already a Premium user!" 
-        else:
-            txt = f"How would you like to purchase a premium plan?" 
+        txt = "Aap premium plan kaise purchase karna chahte hain?"
         await query.message.edit(txt, reply_markup=InlineKeyboardMarkup(btn))
 
-    
-    elif query.data == 'owner_activate_plan':
-        btn = [[
-            InlineKeyboardButton("Contact Owner", url=f"https://t.me/{OWNER_USERNAME}")
-        ],[
-            InlineKeyboardButton("🔙 Back", callback_data=f"activate_plan")
-        ]]
-        await query.message.edit("Contact the bot owner and follow the provided payment method to complete your payment. Once the payment is confirmed, your premium plan will be activated.\n\n⏳ This may take a little time.", reply_markup=InlineKeyboardMarkup(btn))
-
-
-    elif query.data == 'stars_activate_plan':
-        week = await client.create_invoice_link(
-            title='1 Week Premium',
-            description='Unlock premium for 7 days',
-            payload='plan_week',
-            currency='XTR',
-            prices=[LabeledPrice(label="1 Week", amount=ONE_WEEK_STARS)]
-        )
-
-        month = await client.create_invoice_link(
-            title='1 Month Premium',
-            description='Unlock premium for 30 days',
-            payload='plan_month',
-            currency='XTR',
-            prices=[LabeledPrice(label="1 Month", amount=ONE_MONTH_STARS)]
-        )
-
-        three = await client.create_invoice_link(
-            title='3 Months Premium',
-            description='Unlock premium for 90 days',
-            payload='plan_3months',
-            currency='XTR',
-            prices=[LabeledPrice(label="3 Months", amount=THREE_MONTHS_STARS)]
-        )
-
-        six = await client.create_invoice_link(
-            title='6 Months Premium',
-            description='Unlock premium for 180 days',
-            payload='plan_6months',
-            currency='XTR',
-            prices=[LabeledPrice(label="6 Months", amount=SIX_MONTHS_STARS)]
-        )
-
-        year = await client.create_invoice_link(
-            title='1 Year Premium',
-            description='Unlock premium for 365 days',
-            payload='plan_year',
-            currency='XTR',
-            prices=[LabeledPrice(label="1 Year", amount=ONE_YEAR_STARS)]
-        )
-
+    elif query.data == 'upi_activate_plan':
+        # Plans ki list buttons ke saath
         btn = [
-            [InlineKeyboardButton(f'⭐ 1 Week - {ONE_WEEK_STARS} Stars', url=week)],
-            [InlineKeyboardButton(f'⭐ 1 Month - {ONE_MONTH_STARS} Stars', url=month)],
-            [InlineKeyboardButton(f'⭐ 3 Months - {THREE_MONTHS_STARS} Stars', url=three)],
-            [InlineKeyboardButton(f'⭐ 6 Months - {SIX_MONTHS_STARS} Stars', url=six)],
-            [InlineKeyboardButton(f'⭐ 1 Year - {ONE_YEAR_STARS} Stars', url=year)],
+            [InlineKeyboardButton(f"⏳ 1 Week - ₹{ONE_WEEK_PRICE}", callback_data="pay_upi_1week")],
+            [InlineKeyboardButton(f"📅 1 Month - ₹{ONE_MONTH_PRICE}", callback_data="pay_upi_1month")],
+            [InlineKeyboardButton(f"🗓 3 Months - ₹{THREE_MONTHS_PRICE}", callback_data="pay_upi_3months")],
+            [InlineKeyboardButton(f"🔙 Back", callback_data="activate_plan")]
         ]
-        btn.append([InlineKeyboardButton("🔙 Back", callback_data=f"activate_plan")])
+        await query.message.edit_text("💎 Apna plan select karein jiske liye aap UPI se pay karna chahte hain:", reply_markup=InlineKeyboardMarkup(btn))
 
-        await query.message.edit_text(
-            "💎 Choose your Premium plan and pay the required Stars:",
-            reply_markup=InlineKeyboardMarkup(btn)
+    elif query.data.startswith('pay_upi_'):
+        plan_type = query.data.split('_')[-1]
+        
+        # Amount mapping based on info.py prices
+        amounts = {
+            "1week": ONE_WEEK_PRICE,
+            "1month": ONE_MONTH_PRICE,
+            "3months": THREE_MONTHS_PRICE
+        }
+        amount = amounts.get(plan_type, 15)
+
+        # UPI String
+        upi_url = f"upi://pay?pa={UPI_ID}&pn={UPI_NAME}&am={amount}&cu=INR"
+        
+        qr_path = f"qr_{query.from_user.id}.png"
+        qrcode = segno.make(upi_url)
+        qrcode.save(qr_path, scale=10)
+
+        await query.message.reply_photo(
+            photo=qr_path,
+            caption=(
+                f"✨ **Plan Selected:** {plan_type}\n"
+                f"💰 **Amount to Pay:** ₹{amount}\n\n"
+                f"1️⃣ QR Code scan karein ya 'Pay Now' button par click karein.\n"
+                f"2️⃣ Payment ke baad screenshot @{OWNER_USERNAME} ko bhejein.\n"
+                "3️⃣ Verification ke baad aapka plan activate ho jayega."
+            ),
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔗 Pay Now (Mobile Only)", url=upi_url)],
+                [InlineKeyboardButton("✅ I Have Paid", url=f"https://t.me/{OWNER_USERNAME}")]
+            ])
         )
+        if os.path.exists(qr_path):
+            os.remove(qr_path)
+
 
     elif query.data == "start":
         buttons = [[
