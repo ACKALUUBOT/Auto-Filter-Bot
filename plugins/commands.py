@@ -1,5 +1,4 @@
 import os
-import segno
 import random
 import string
 import asyncio
@@ -35,7 +34,7 @@ async def start(client, message):
     try:
         await message.react(emoji=random.choice(REACTIONS), big=True)
     except:
-        await message.react(emoji="🕊️", big=True)
+        await message.react(emoji="⚡️", big=True)
 
     if not await db.is_user_exist(message.from_user.id):
         await db.add_user(message.from_user.id, message.from_user.first_name)
@@ -467,9 +466,9 @@ async def plan(client, message):
     if not IS_PREMIUM:
         return await message.reply('Premium feature was disabled by admin')
     btn = [[
-        InlineKeyboardButton('🎁 ᖴᖇᗴᗴ TᖇIᗩᒪ', callback_data='activate_trial')
+        InlineKeyboardButton('Activate Trial', callback_data='activate_trial')
     ],[
-        InlineKeyboardButton('🧾 ᐯIᗴᗯ ᑭᒪᗩᑎՏ', callback_data='activate_plan')
+        InlineKeyboardButton('Activate Plan', callback_data='activate_plan')
     ]]
     await message.reply(script.PLAN_TXT.format(OWNER_USERNAME), reply_markup=InlineKeyboardMarkup(btn))
 

@@ -1,15 +1,13 @@
 import asyncio
 import re
 from time import time as time_now
-import math
-import os
-import segno
+import math, os
 import random
 from pyrogram.errors.exceptions.bad_request_400 import MediaEmpty, PhotoInvalidDimensions, WebpageMediaEmpty
 from Script import script
 from datetime import datetime, timedelta
-from info import*
-from pyrogram.types import WebAppInfo, Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, InputMediaPhoto, LinkPreviewOptions
+from info import IS_PREMIUM, PICS, TUTORIAL, SHORTLINK_API, SHORTLINK_URL, OWNER_USERNAME, ONE_WEEK_STARS, ONE_MONTH_STARS, THREE_MONTHS_STARS, SIX_MONTHS_STARS, ONE_YEAR_STARS, SECOND_FILES_DATABASE_URL, ADMINS, URL, MAX_BTN, BIN_CHANNEL, IS_STREAM, DELETE_TIME, FILMS_LINK, LOG_CHANNEL, SUPPORT_GROUP, SUPPORT_LINK, UPDATES_LINK, LANGUAGES, QUALITY
+from pyrogram.types import WebAppInfo, PreCheckoutQuery, Message, LabeledPrice, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, InputMediaPhoto, LinkPreviewOptions
 from pyrogram import Client, filters, enums
 from utils import is_premium, get_size, is_subscribed, is_check_admin, get_wish, get_shortlink, get_readable_time, get_poster, temp, get_settings, save_group_settings
 from database.users_chats_db import db
@@ -18,6 +16,45 @@ from plugins.commands import get_grp_stg
 
 BUTTONS = {}
 CAP = {}
+
+
+# payment handle
+@Client.on_pre_checkout_query()
+async def pre_checkout(client, query: PreCheckoutQuery):
+    await query.answer(ok=True)
+
+# payment confirmation
+@Client.on_message(filters.successful_payment)
+async def payment_successful(client, message: Message):
+    user = message.from_user
+    payload = message.successful_payment.invoice_payload 
+
+    plans = {
+        "plan_week": 7,
+        "plan_month": 30,
+        "plan_3months": 90,
+        "plan_6months": 180,
+        "plan_year": 365
+    }
+    days = plans.get(payload)
+    mp = db.get_plan(user.id)
+    ex = datetime.now() + timedelta(days=days)
+    mp['expire'] = ex
+    mp['plan'] = f'{days} days'
+    mp['premium'] = True
+    db.update_plan(user.id, mp)
+    await message.reply(f"Congratulations! Your Premium has been activated! 🎉\n⏳ Expires on: {ex.strftime('%Y-%m-%d %H:%M:%S')}")
+    await message.reply(f"Transaction ID: <code>{message.successful_payment.telegram_payment_charge_id}</code>")
+    await client.send_message(
+        LOG_CHANNEL,
+        f"💎 Premium Purchased\n\n"
+        f"👤 User: {user.mention} - {user.id}\n"
+        f"📦 Plan: {f'{days} days'}\n"
+        f"⭐ Stars: <code>{message.successful_payment.total_amount}</code>\n"
+        f"Transaction ID: <code>{message.successful_payment.telegram_payment_charge_id}</code>"
+    )
+
+
 
 @Client.on_message(filters.private & filters.text & filters.incoming)
 async def pm_search(client, message):
@@ -569,7 +606,83 @@ async def cb_handler(client: Client, query: CallbackQuery):
         db.update_plan(query.from_user.id, mp)
         await query.message.edit(f"Congratulations! Your activated trial for 1 hour\nExpire: {ex.strftime('%Y.%m.%d %H:%M:%S')}")
 
+    elif query.data == 'activate_plan':
+        btn = [[
+            InlineKeyboardButton("⭐️ Using Telegram Stars", callback_data=f"stars_activate_plan")
+        ],[
+            InlineKeyboardButton("🗣 Contacting Owner", callback_data=f"owner_activate_plan")
+        ]]
+        if await is_premium(query.from_user.id, client):
+            txt = f"How would you like to purchase a premium plan?\n\nNone - You are already a Premium user!" 
+        else:
+            txt = f"How would you like to purchase a premium plan?" 
+        await query.message.edit(txt, reply_markup=InlineKeyboardMarkup(btn))
+
     
+    elif query.data == 'owner_activate_plan':
+        btn = [[
+            InlineKeyboardButton("Contact Owner", url=f"https://t.me/{OWNER_USERNAME}")
+        ],[
+            InlineKeyboardButton("🔙 Back", callback_data=f"activate_plan")
+        ]]
+        await query.message.edit("Contact the bot owner and follow the provided payment method to complete your payment. Once the payment is confirmed, your premium plan will be activated.\n\n⏳ This may take a little time.", reply_markup=InlineKeyboardMarkup(btn))
+
+
+    elif query.data == 'stars_activate_plan':
+        week = await client.create_invoice_link(
+            title='1 Week Premium',
+            description='Unlock premium for 7 days',
+            payload='plan_week',
+            currency='XTR',
+            prices=[LabeledPrice(label="1 Week", amount=ONE_WEEK_STARS)]
+        )
+
+        month = await client.create_invoice_link(
+            title='1 Month Premium',
+            description='Unlock premium for 30 days',
+            payload='plan_month',
+            currency='XTR',
+            prices=[LabeledPrice(label="1 Month", amount=ONE_MONTH_STARS)]
+        )
+
+        three = await client.create_invoice_link(
+            title='3 Months Premium',
+            description='Unlock premium for 90 days',
+            payload='plan_3months',
+            currency='XTR',
+            prices=[LabeledPrice(label="3 Months", amount=THREE_MONTHS_STARS)]
+        )
+
+        six = await client.create_invoice_link(
+            title='6 Months Premium',
+            description='Unlock premium for 180 days',
+            payload='plan_6months',
+            currency='XTR',
+            prices=[LabeledPrice(label="6 Months", amount=SIX_MONTHS_STARS)]
+        )
+
+        year = await client.create_invoice_link(
+            title='1 Year Premium',
+            description='Unlock premium for 365 days',
+            payload='plan_year',
+            currency='XTR',
+            prices=[LabeledPrice(label="1 Year", amount=ONE_YEAR_STARS)]
+        )
+
+        btn = [
+            [InlineKeyboardButton(f'⭐ 1 Week - {ONE_WEEK_STARS} Stars', url=week)],
+            [InlineKeyboardButton(f'⭐ 1 Month - {ONE_MONTH_STARS} Stars', url=month)],
+            [InlineKeyboardButton(f'⭐ 3 Months - {THREE_MONTHS_STARS} Stars', url=three)],
+            [InlineKeyboardButton(f'⭐ 6 Months - {SIX_MONTHS_STARS} Stars', url=six)],
+            [InlineKeyboardButton(f'⭐ 1 Year - {ONE_YEAR_STARS} Stars', url=year)],
+        ]
+        btn.append([InlineKeyboardButton("🔙 Back", callback_data=f"activate_plan")])
+
+        await query.message.edit_text(
+            "💎 Choose your Premium plan and pay the required Stars:",
+            reply_markup=InlineKeyboardMarkup(btn)
+        )
+
     elif query.data == "start":
         buttons = [[
             InlineKeyboardButton("+ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ +", url=f'http://t.me/{temp.U_NAME}?startgroup=start', style=enums.ButtonStyle.PRIMARY)
