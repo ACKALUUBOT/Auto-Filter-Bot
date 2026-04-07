@@ -120,7 +120,7 @@ async def start(client, message):
         ],[
             InlineKeyboardButton('🤑ᗷᑌY ᑭᖇᗴᗰIᑌᗰ', url=f"https://t.me/{temp.U_NAME}?start=premium",  style=enums.ButtonStyle.SUCCESS)
         ]]
-        await message.reply("ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴠᴇʀɪғɪᴇᴅ ᴛᴏᴅᴀʏ, ᴘʟᴇᴀꜱᴇ ᴄʟɪᴄᴋ\n ᴏɴ ᴠᴇʀɪғʏ & ɢᴇᴛ ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇꜱꜱ ғᴏʀ ᴛɪʟʟ\n ɴᴇxᴛ ᴠᴇʀɪғɪᴄᴀᴛɪᴏn🔐", reply_markup=InlineKeyboardMarkup(btn), protect_content=True)
+        await message.reply("ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴠᴇʀɪғɪᴇᴅ ᴛᴏᴅᴀʏ, ᴘʟᴇᴀꜱᴇ ᴄʟɪᴄᴋ\n ᴏɴ ᴠᴇʀɪғʏ & ɢᴇᴛ ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇꜱꜱ ғᴏʀ ᴛɪʟʟ ɴᴇxᴛ ᴠᴇʀɪғɪᴄᴀᴛɪᴏn 🔐", reply_markup=InlineKeyboardMarkup(btn), protect_content=True)
         return
 
     btn = await is_subscribed(client, message)
@@ -476,66 +476,85 @@ async def plan(client, message):
 @Client.on_message(filters.command('add_prm') & filters.user(ADMINS))
 async def add_prm(bot, message):
     if not IS_PREMIUM:
-        return await message.reply('Premium feature was disabled')
+        return await message.reply('Premium feature is disabled')
+    
     try:
-        _, user_id, d = message.text.split(' ')
+        # User input split karna
+        input_data = message.text.split(' ')
+        if len(input_data) != 3:
+            raise ValueError
+        user_id = input_data[1]
+        d_str = input_data[2].lower()
     except:
-        return await message.reply('Usage: /add_prm user_id 1d')
+        return await message.reply('Usage: `/add_prm user_id 1d`')
+
+    # Days extract karna (e.g., '7d' -> 7)
     try:
-        d = int(d[:-1])
+        days = int(d_str.replace('d', ''))
     except:
-        return await message.reply('Not valid days, use: 1d, 7d, 30d, 365d, etc...')
+        return await message.reply('Invalid format! Use: 1d, 7d, 30d etc.')
+
     try:
-        user = await bot.get_users(user_id)
+        # IMPORTANT: ID ko integer mein convert karein taaki 400 error na aaye
+        target_id = int(user_id) if user_id.isdigit() else user_id
+        user = await bot.get_users(target_id)
     except Exception as e:
-        return await message.reply(f'Error: {e}')
+        return await message.reply(f'Error: User not found or Bot not started by user. \nDetails: {e}')
+
     if user.id in ADMINS:
-        return await message.reply('ADMINS is already premium')
-    if not await is_premium(user.id, bot):
-        mp = db.get_plan(user.id)
-        ex = datetime.now() + timedelta(days=d)
-        mp['expire'] = ex
-        mp['plan'] = f'{d} days'
-        mp['premium'] = True
-        db.update_plan(user.id, mp)
-        await message.reply(f"Given premium to {user.mention}\nExpire: {ex.strftime('%Y.%m.%d %H:%M:%S')}")
-        try:
-            await bot.send_message(user.id, f"Your now premium user\nExpire: {ex.strftime('%Y.%m.%d %H:%M:%S')}")
-        except:
-            pass
-    else:
-        await message.reply(f"{user.mention} is already premium user")
+        return await message.reply('Admins are always premium.')
 
+    # Database update logic
+    ex_date = datetime.now() + timedelta(days=days)
+    plan_data = {
+        'expire': ex_date,
+        'plan': f'{days} days',
+        'premium': True
+    }
+    
+    db.update_plan(user.id, plan_data)
+    
+    msg_text = f"✅ **Premium Added!**\n👤 User: {user.mention}\n⏳ Duration: {days} days\n📅 Expire: `{ex_date.strftime('%Y-%m-%d %H:%M:%S')}`"
+    await message.reply(msg_text)
 
+    try:
+        await bot.send_message(user.id, f"🎉 Congratulations! You are now a **Premium User**.\nExpire: `{ex_date.strftime('%Y-%m-%d %H:%M:%S')}`")
+    except:
+        pass
 
 @Client.on_message(filters.command('rm_prm') & filters.user(ADMINS))
 async def rm_prm(bot, message):
     if not IS_PREMIUM:
-        return await message.reply('Premium feature was disabled')
+        return await message.reply('Premium feature is disabled')
+
     try:
-        _, user_id = message.text.split(' ')
+        input_data = message.text.split(' ')
+        if len(input_data) != 2:
+            raise ValueError
+        user_id = input_data[1]
     except:
-        return await message.reply('Usage: /rm_prm user_id')
+        return await message.reply('Usage: `/rm_prm user_id`')
+
     try:
-        user = await bot.get_users(user_id)
+        # ID conversion to prevent method error
+        target_id = int(user_id) if user_id.isdigit() else user_id
+        user = await bot.get_users(target_id)
     except Exception as e:
         return await message.reply(f'Error: {e}')
-    if user.id in ADMINS:
-        return await message.reply('ADMINS is already premium')
-    if not await is_premium(user.id, bot):
-        await message.reply(f"{user.mention} is not premium user")
-    else:
-        mp = db.get_plan(user.id)
-        mp['expire'] = ''
-        mp['plan'] = ''
-        mp['premium'] = False
-        db.update_plan(user.id, mp)
-        await message.reply(f"{user.mention} is no longer premium user")
-        try:
-            await bot.send_message(user.id, "Your premium plan was removed by admin")
-        except:
-            pass
 
+    # Plan remove logic
+    plan_data = {
+        'expire': None,
+        'plan': '',
+        'premium': False
+    }
+    db.update_plan(user.id, plan_data)
+    
+    await message.reply(f"❌ **Premium Removed** for {user.mention}")
+    try:
+        await bot.send_message(user.id, "⚠️ Your premium plan has been removed by Admin.")
+    except:
+        pass
 
 @Client.on_message(filters.command('prm_list') & filters.user(ADMINS))
 async def prm_list(bot, message):
