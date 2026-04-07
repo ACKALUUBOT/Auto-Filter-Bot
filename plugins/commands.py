@@ -1,4 +1,5 @@
-import os, segno
+import os
+import segno
 import random
 import string
 import asyncio
@@ -466,9 +467,9 @@ async def plan(client, message):
     if not IS_PREMIUM:
         return await message.reply('Premium feature was disabled by admin')
     btn = [[
-        InlineKeyboardButton('Activate Trial', callback_data='activate_trial')
+        InlineKeyboardButton('🎁 ᖴᖇᗴᗴ TᖇIᗩᒪ', callback_data='activate_trial')
     ],[
-        InlineKeyboardButton('Activate Plan', callback_data='activate_plan')
+        InlineKeyboardButton('🧾 ᐯIᗴᗯ ᑭᒪᗩᑎՏ', callback_data='activate_plan')
     ]]
     await message.reply(script.PLAN_TXT.format(OWNER_USERNAME), reply_markup=InlineKeyboardMarkup(btn))
 
