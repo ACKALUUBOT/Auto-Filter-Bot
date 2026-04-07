@@ -39,7 +39,7 @@ BOT_ID = BOT_TOKEN.split(":")[0]
 PORT = int(environ.get('PORT', '80'))
 
 # Upload your images to "postimages.org" and get direct link
-PICS = (environ.get('PICS', 'https://o.uguu.se/XciEgKWG.jpg')).split()
+PICS = (environ.get('PICS', 'https://n.uguu.se/ALWAgaeD.jpg')).split()
 
 # Bot Admins
 ADMINS = environ.get('ADMINS', '5493832202')
