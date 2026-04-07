@@ -17,45 +17,6 @@ from plugins.commands import get_grp_stg
 BUTTONS = {}
 CAP = {}
 
-
-# payment handle
-@Client.on_pre_checkout_query()
-async def pre_checkout(client, query: PreCheckoutQuery):
-    await query.answer(ok=True)
-
-# payment confirmation
-@Client.on_message(filters.successful_payment)
-async def payment_successful(client, message: Message):
-    user = message.from_user
-    payload = message.successful_payment.invoice_payload 
-
-    plans = {
-        "plan_week": 7,
-        "plan_month": 30,
-        "plan_3months": 90,
-        "plan_6months": 180,
-        "plan_year": 365
-    }
-    days = plans.get(payload)
-    mp = db.get_plan(user.id)
-    ex = datetime.now() + timedelta(days=days)
-    mp['expire'] = ex
-    mp['plan'] = f'{days} days'
-    mp['premium'] = True
-    db.update_plan(user.id, mp)
-    await message.reply(f"Congratulations! Your Premium has been activated! 🎉\n⏳ Expires on: {ex.strftime('%Y-%m-%d %H:%M:%S')}")
-    await message.reply(f"Transaction ID: <code>{message.successful_payment.telegram_payment_charge_id}</code>")
-    await client.send_message(
-        LOG_CHANNEL,
-        f"💎 Premium Purchased\n\n"
-        f"👤 User: {user.mention} - {user.id}\n"
-        f"📦 Plan: {f'{days} days'}\n"
-        f"⭐ Stars: <code>{message.successful_payment.total_amount}</code>\n"
-        f"Transaction ID: <code>{message.successful_payment.telegram_payment_charge_id}</code>"
-    )
-
-
-
 @Client.on_message(filters.private & filters.text & filters.incoming)
 async def pm_search(client, message):
     if message.text.startswith("/"):
