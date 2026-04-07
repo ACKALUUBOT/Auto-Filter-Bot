@@ -1,7 +1,7 @@
 import os
 import urllib.parse
 import segno
-from Info import * # Sabhi variables Info.py se load karne ke liye
+from info import* # Sabhi variables Info.py se load karne ke liye
 from pyrogram import Client, filters, enums 
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 
