@@ -690,11 +690,10 @@ async def cb_handler(client: Client, query: CallbackQuery):
             InlineKeyboardButton('ℹ️ ᑌᑭᗪᗩTᗴՏ', url=UPDATES_LINK),
             InlineKeyboardButton('🧑‍💻 ꜱᴜᴘᴘᴏʀᴛ', url=SUPPORT_LINK)
         ],[
-            InlineKeyboardButton('👨‍🚒 Help', callback_data='help'),
-            InlineKeyboardButton('🔎 ɪɴʟɪɴᴇ', switch_inline_query_current_chat=''),
+            InlineKeyboardButton('👨‍🚒 ᕼᗴᒪᑭ', callback_data='help'),
             InlineKeyboardButton('📚 ᗩᗷOᑌT', callback_data='about')
         ],[
-            InlineKeyboardButton('🤑ᑭᖇᗴᗰIᑌᗰ', url=f"https://t.me/{temp.U_NAME}?start=premium")
+            InlineKeyboardButton('🤑ᗷᑌY ᑭᖇᗴᗰIᑌᗰ', url=f"https://t.me/{temp.U_NAME}?start=premium")
         ],[
             InlineKeyboardButton('🌐 ᗰIᑎI ᗯᗴᗷᗩᑭᑭ 🌐', style=enums.ButtonStyle.SUCCESS, web_app=WebAppInfo(url=URL))
         ]]
