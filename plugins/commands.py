@@ -1,4 +1,4 @@
-import os
+import os, segno
 import random
 import string
 import asyncio
@@ -34,7 +34,7 @@ async def start(client, message):
     try:
         await message.react(emoji=random.choice(REACTIONS), big=True)
     except:
-        await message.react(emoji="⚡️", big=True)
+        await message.react(emoji="🕊️", big=True)
 
     if not await db.is_user_exist(message.from_user.id):
         await db.add_user(message.from_user.id, message.from_user.first_name)
