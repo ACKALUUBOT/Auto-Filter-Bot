@@ -8,4 +8,3 @@ speedtest-cli
 uvloop
 requests
 pytz
-segno
