@@ -148,12 +148,17 @@ REACTIONS = [reactions for reactions in environ.get('REACTIONS', '🤝 😇 🤗
 IS_PREMIUM = is_enabled('IS_PREMIUM', True)
 OWNER_USERNAME = environ.get("OWNER_USERNAME", "HDFILM0900_BOT")
 
-# Telegram Stars required to purchase Premium plans
-ONE_WEEK_STARS = int(environ.get("ONE_WEEK_STARS", "30"))
-ONE_MONTH_STARS = int(environ.get("ONE_MONTH_STARS", "55"))
-THREE_MONTHS_STARS = int(environ.get("THREE_MONTHS_STARS", "120"))
-SIX_MONTHS_STARS = int(environ.get("SIX_MONTHS_STARS", "220"))
-ONE_YEAR_STARS = int(environ.get("ONE_YEAR_STARS", "400"))
+
+# Yahan apni UPI details bharein
+UPI_ID = environ.get("UPI_ID", "6398324472@fam") 
+UPI_NAME = environ.get("UPI_NAME", "FUN WAVE FM")
+
+# UPI Prices in INR (₹)
+ONE_WEEK_PRICE = int(environ.get("ONE_WEEK_PRICE", "15"))
+ONE_MONTH_PRICE = int(environ.get("ONE_MONTH_PRICE", "49"))
+THREE_MONTHS_PRICE = int(environ.get("THREE_MONTHS_PRICE", "149"))
+SIX_MONTHS_PRICE = int(environ.get("SIX_MONTHS_PRICE", "250"))
+ONE_YEAR_PRICE = int(environ.get("ONE_YEAR_PRICE", "499"))
 
 # for TMDb
 TMDB_API_KEY = environ.get("TMDB_API_KEY", "4a550d8fe1ae85f11471f5766194feea")  # Get API key from here - https://www.themoviedb.org/settings/api
