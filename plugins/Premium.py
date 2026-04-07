@@ -1,7 +1,7 @@
 import os
 import urllib.parse
 import segno
-from info import * # Ensure UPI_ID, UPI_NAME, PRICES, and OWNER_USERNAME are here
+from info import * 
 from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 
@@ -9,6 +9,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQ
 async def callback_handler(client, query: CallbackQuery):
     data = query.data
 
+    # 1. Main Menu
     if data == 'activate_plan':
         btn = [
             [InlineKeyboardButton("💳 Pay via UPI (QR Code)", callback_data="upi_plans")],
@@ -19,8 +20,8 @@ async def callback_handler(client, query: CallbackQuery):
             reply_markup=InlineKeyboardMarkup(btn)
         )
 
+    # 2. Plan Selection
     elif data == "upi_plans":
-        # Using variables directly from info.py
         btn = [
             [InlineKeyboardButton(f"⏳ 1 Week - ₹{ONE_WEEK_PRICE}", callback_data="pay_upi_1week")],
             [InlineKeyboardButton(f"📅 1 Month - ₹{ONE_MONTH_PRICE}", callback_data="pay_upi_1month")],
@@ -29,6 +30,7 @@ async def callback_handler(client, query: CallbackQuery):
         ]
         await query.message.edit_text("💎 **Apna plan select karein:**", reply_markup=InlineKeyboardMarkup(btn))
 
+    # 3. QR Generation & Payment Link
     elif data.startswith('pay_upi_'):
         plan_type = data.split('_')[-1]
         
@@ -41,7 +43,6 @@ async def callback_handler(client, query: CallbackQuery):
 
         # UPI URL Construction
         encoded_name = urllib.parse.quote(UPI_NAME)
-        # Added a note (tn) to the UPI URL so you know what the payment is for
         upi_url = f"upi://pay?pa={UPI_ID}&pn={encoded_name}&am={amount}&cu=INR&tn=Premium_{plan_type}"
         
         qr_path = f"qr_{query.from_user.id}.png"
@@ -51,36 +52,37 @@ async def callback_handler(client, query: CallbackQuery):
             qrcode = segno.make(upi_url)
             qrcode.save(qr_path, scale=10, border=2)
 
+            # NOTE: UPI Link text mein diya hai kyunki Buttons mein upi:// allow nahi hai
             caption = (
                 f"✨ **Plan Selected:** `{plan_type.upper()}`\n"
                 f"💰 **Amount to Pay:** `₹{amount}`\n\n"
                 f"1️⃣ **QR Code scan karein** kisi bhi UPI App se.\n"
-                f"2️⃣ **Mobile Users:** Aap niche diye gaye button se direct pay kar sakte hain.\n\n"
+                f"2️⃣ **Mobile Users:** [Yahan Click Karein]({upi_url}) direct pay karne ke liye.\n\n"
                 f"⚠️ **Payment ke baad screenshot** @{OWNER_USERNAME} ko bhejein."
             )
 
             await query.message.reply_photo(
                 photo=qr_path,
                 caption=caption,
+                parse_mode=enums.ParseMode.MARKDOWN,
                 reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("🔗 Open UPI App (Pay Now)", url=upi_url)],
                     [InlineKeyboardButton("✅ Paid (Send Screenshot)", url=f"https://t.me/{OWNER_USERNAME}")],
                     [InlineKeyboardButton("❌ Close", callback_data="close_data")]
                 ])
             )
-            # Delete the previous menu message to keep the chat clean
+            # Purana text message delete kar rahe hain
             await query.message.delete()
 
         except Exception as e:
             await query.answer(f"Error: {e}", show_alert=True)
         finally:
+            # QR code image delete karna file storage saaf rakhne ke liye
             if os.path.exists(qr_path):
                 os.remove(qr_path)
 
+    # 4. Close Handler
     elif data == "close_data":
         try:
             await query.message.delete()
-            if query.message.reply_to_message:
-                await query.message.reply_to_message.delete()
         except Exception:
-            await query.answer("Message deleted!", show_alert=False)
+            await query.answer("Message already deleted.")
