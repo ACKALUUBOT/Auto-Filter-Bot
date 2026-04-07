@@ -119,7 +119,7 @@ async def start(client, message):
         ],[
             InlineKeyboardButton('🗳 Tutorial 🗳', url=VERIFY_TUTORIAL)
         ]]
-        await message.reply("You not verified today! Kindly verify now. 🔐", reply_markup=InlineKeyboardMarkup(btn), protect_content=True)
+        await message.reply("ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ᴠᴇʀɪғɪᴇᴅ ᴛᴏᴅᴀʏ, ᴘʟᴇᴀꜱᴇ ᴄʟɪᴄᴋ\n ᴏɴ ᴠᴇʀɪғʏ & ɢᴇᴛ ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇꜱꜱ ғᴏʀ ᴛɪʟʟ\n ɴᴇxᴛ ᴠᴇʀɪғɪᴄᴀᴛɪᴏn🔐", reply_markup=InlineKeyboardMarkup(btn), protect_content=True)
         return
 
     btn = await is_subscribed(client, message)
